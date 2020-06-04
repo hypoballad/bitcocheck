@@ -1,0 +1,232 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.github.hypodatabank.localcachegrpc";
+option java_outer_classname = "bitcocheck";
+
+package bitcocheck;
+
+// Exchange API 
+service Coincheck {
+    // You can get the latest information easily.
+    rpc Ticker (Empty) returns (TickerItem) {}
+
+    rpc TickerHist (TickerHistParam) returns (TickerHistItem) {}
+
+    // You can get the latest transaction history.
+    rpc Trades (TradesParams) returns (TradesItem) {}
+    // Board information can be obtained.
+    rpc OrderBooks (Empty) returns (OrderBooksItem) {}
+    // The rate is calculated based on the exchange's order.
+    rpc ExchangeOrdersRate (ExchangeOrdersRateParam) returns (ExchangeOrdersRateItem) {}
+    // Get a dealership rate
+    rpc RatePair (RatePairParams) returns (RatePairItem) {}
+    // Market order Cash transaction Buy
+    rpc MarketBuy (MarketBuyParams) returns (MarketItem) {}
+    // Market orders, spot trading, selling
+    rpc MarketSell (MarketSellParam) returns (MarketItem) {}
+    // Limit order, spot trading, buy.
+    rpc LimitBuy (LimitOrderParams) returns (MarketItem) {}
+    // Limit order, spot trading, sell.
+    rpc LimitSell (LimitOrderParams) returns (MarketItem) {}
+    // View a list of pending orders in your account.
+    rpc ExchangeOrdersOpens (Empty) returns (OrdersOpensItem) {}
+    // You can cancel a new order or a pending order by specifying an ID in the order list.
+    rpc DeleteExchangeOrder (DeleteOrderParam) returns (DeleteOrderItem) {}
+    // You can see your recent transaction history.
+    rpc ExchangeOrdersTransactions (Empty) returns (OrdersTransactionsItem) {}
+    // You can check the balance of your account.
+    rpc AccountsBalance (Empty) returns (AccountsBalanceItem) {}
+    // View your account information.
+    rpc Accounts (Empty) returns (AccountsItem) {}
+}
+
+message Empty {}
+
+message TickerItem {
+    float Last = 1;      // The price of the last trade
+    float Bid = 2;       // Highest price of current buy order
+    float Ask = 3;       // Lowest price for the current sell order
+    float High = 4;     // Highest trading price in 24 hours
+    float Low = 5;       // Lowest deal price in 24 hours
+    float Volume = 6;     // Volume of transactions in a 24-hour period
+    uint64 Timestamp = 7; // Current time
+}
+
+message TradesParams {
+    string Pair = 1; // Trading pairs. Currently, "btc_jpy" and "fct_jpy" are available.
+}
+
+message Pagenation {
+    uint32 Limit = 1;
+    string Order = 2;
+    string StartingAfter = 3;
+    string EndingBefore = 4;
+}
+
+message TradeData {
+    uint32 ID = 1;
+    string Amount =2;
+    float Rate = 3;
+    string Pair = 4;
+    string OrderType = 5;
+    string CreatedAt = 6;
+}
+
+message TradesItem {
+    bool success = 1;
+    Pagenation pagination = 2;
+    repeated TradeData data = 3;
+}
+
+message OrderArray {
+    repeated string items = 1;
+}
+
+message OrderBooksItem {
+    repeated OrderArray asks = 1;
+    repeated OrderArray bids = 2;
+}
+
+message ExchangeOrdersRateParam {
+    string order_type = 1;
+    string pair = 2;
+    string amountprice = 3;
+    string value = 4;
+}
+
+message ExchangeOrdersRateItem {
+    bool success = 1;
+    string rate = 2;
+    string price = 3;
+    string amount = 4;
+}
+
+message RatePairParams {
+    string pair = 1;
+}
+
+message RatePairItem {
+    string rate = 1;
+}
+
+message MarketBuyParams {
+    string pair = 1;
+    uint32 market_buy_amount = 2;
+}
+
+message MarketSellParam {
+    string pair = 1;
+    uint32 amount = 2;
+}
+
+message LimitOrderParams {
+    int64 id = 1;
+    string pair = 2;
+    string rate = 3;
+    string amount = 4;
+    string stop_loss_rate = 5;
+}
+
+message MarketItem {
+    string success = 1;
+    uint64 id = 2;
+    string rate = 3;
+    string amount = 4;
+    string order_type = 5;
+    string stop_loss_rate = 6;
+    string pair = 7;
+    string created_at = 8;
+}
+
+message OpenItem {
+    uint32 id = 1;
+    string order_type = 2;
+    uint32 rate = 3;
+    string  pending_amount = 4;
+    string pending_market_buy_amount = 5;
+    string stop_loss_rate = 6;
+    string created_at = 7;
+}
+
+message OrdersOpensItem {
+    bool success = 1;
+    repeated OpenItem orders = 2;
+}
+
+message DeleteOrderParam {
+    uint32 id = 1;
+}
+
+message DeleteOrderItem {
+    bool success = 1;
+    uint32 id = 2;
+}
+
+message Funds {
+    string btc = 1;
+    string jpy = 2;
+}
+
+message TransactionsItem {
+    uint32 id = 1;
+    uint32 order_id  = 2;
+    string created_at = 3;
+    Funds funds = 4;
+    string pair = 5;
+    string rate = 6;
+    string fee_currency = 7;
+    string fee = 8;
+    string liquidity = 9;
+    string side = 10;
+}
+
+message OrdersTransactionsItem {
+    bool success = 1;
+    repeated TransactionsItem transactions = 2;
+}
+
+message AccountsBalanceItem {
+    bool success = 1; 
+    string jpy = 2; // Balance in Japanese Yen
+    string btc = 3; // Your Bitcoin balance
+    string jpy_reserved = 4; // The total amount of Japanese yen used for pending buy orders
+    string btc_reserved = 5; // The total amount of bitcoins used for pending sell orders
+    string jpy_lend_in_use = 6; // The total amount of Japanese yen for which you have applied for a loan (currently, we do not provide a Japanese yen loan function)
+    string btc_lend_in_use = 7; // Total Bitcoin you have applied to lend (we don't currently offer a Bitcoin lending feature)
+    string jpy_lent = 8; // The total amount of Japanese yen that has been lent (currently, we do not offer the function of lending Japanese yen)
+    string btc_lent = 9; // Total bitcoins lent (we do not currently offer a bitcoin lending feature)
+    string jpy_debt = 10; // Total amount of Japanese yen borrowed
+    string btc_debt = 11;// The combination of the bitcoin you owe
+}
+
+message Fees {
+    string taker_fee = 1;
+    string maker_fee = 2;
+}
+
+message ExchangeFees {
+    Fees btc_jpy = 1;
+    Fees ftc_jpy = 2;
+}
+
+message AccountsItem {
+    bool success = 1; // The ID of your account, which matches the ID you specify when you deposit Japanese Yen.
+    uint32 id = 2; // Registered email address
+    string email = 3; // 
+    string identity_status = 4; // Displays the status of the identity verification documents submitted.
+    string bitcoin_address = 5; // The address of the bitcoin for your deposit
+    uint32 lending_leverage = 6; // Displays your leverage.
+    string taker_fee = 7; // Displays the commission for orders placed as a Taker. (BTC_JPY)
+    string maker_fee = 8; // Shows you the commission for placing an order as a Maker. (BTC_JPY)
+    ExchangeFees exchange_fees = 9; //  Displays the fee per board.
+}
+
+message TickerHistParam {
+    uint32 limit = 1;
+}
+
+message TickerHistItem {
+    repeated TickerItem tickeritem = 1;
+}
+
