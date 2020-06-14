@@ -331,7 +331,7 @@ func main() {
 		log.Fatalln("job error:", err)
 	}
 	c := cron.New()
-	c.AddFunc("@every 1m", func() {
+	c.AddFunc("@every 1h", func() {
 		if err := job(conn, conf); err != nil {
 			log.Printf("job error %v\n", err)
 		}
