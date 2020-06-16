@@ -570,25 +570,26 @@ func LimitSell(conn *grpc.ClientConn, in *bitco.LimitOrderParams) (*bitco.Market
 }
 
 func SellOrder(sqlcon *sqlite3.Conn, addr string, actual bool) {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
 	orders, err := FindBuyList(sqlcon)
 	if err != nil {
 		log.Println("find buy list error:", err)
 		return
 	}
 	fmt.Println("== 売り注文 ==")
-	if len(orders) > 0 {
+	if len(orders) == 0 {
 		fmt.Println("ポジションはありません")
 		return
 	}
-
+	conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+		return
+	}
+	defer conn.Close()
 	salesrate, err := SalesRate(conn)
 	if err != nil {
 		log.Println("sales rate error:", err)
+		return
 	}
 
 	sellrate, err := SellRateBtc(conn, orders[0].Btc)
@@ -619,6 +620,11 @@ func SellOrder(sqlcon *sqlite3.Conn, addr string, actual bool) {
 		}
 	}
 
+	// debugJson(item)
+	fmt.Printf("レート: %s 円(1btc)\n", humanizeYen(salesrate.Rate))
+	fmt.Printf("値: %s 円(1btc)\n", humanizeYen(item.Rate))
+	fmt.Printf("%s円 : %sbtc\n", humanizeYen(sellrate.Price), item.Amount)
+	fmt.Println()
 }
 
 func main() {
@@ -644,7 +650,9 @@ func main() {
 	case "cancel":
 		CancelOrder(conn, *addr, *debugMode)
 	case "limitbuy":
-		BuyOrder(conn, *addr, *debugMode)
+		BuyOrder(conn, *addr, *actualMode)
+	case "limitsell":
+		SellOrder(conn, *addr, *actualMode)
 	default:
 		log.Printf("command not found: %s\n", *commandName)
 		os.Exit(0)
