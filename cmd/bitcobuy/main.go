@@ -522,6 +522,7 @@ func BuyOrder(sqlcon *sqlite3.Conn, addr string, actual bool) {
 	salesrate, err := SalesRate(conn)
 	if err != nil {
 		log.Println("sales rate error:", err)
+		return
 	}
 
 	in := bitco.LimitOrderParams{}
@@ -532,6 +533,11 @@ func BuyOrder(sqlcon *sqlite3.Conn, addr string, actual bool) {
 	var item *bitco.MarketItem
 	if actual {
 		// LimitBuy
+		item, err = LimitBuy(conn, &in)
+		if err != nil {
+			log.Println("limit buy error:", err)
+			return
+		}
 	} else {
 		now := time.Now()
 		item = &bitco.MarketItem{
@@ -606,6 +612,11 @@ func SellOrder(sqlcon *sqlite3.Conn, addr string, actual bool) {
 	var item *bitco.MarketItem
 	if actual {
 		// LimitSell
+		item, err = LimitSell(conn, &in)
+		if err != nil {
+			log.Println("limit sell error:", err)
+			return
+		}
 	} else {
 		now := time.Now()
 		item = &bitco.MarketItem{
